@@ -15,21 +15,19 @@ def _get_tts():
     return _tts
 
 
-def synthesize_speech(text: str, lang: str, speaker_id=None) -> str:
+def synthesize_speech(text: str, lang: str, speaker_id: int = 0) -> str:
     tts = _get_tts()
 
-    # Fallback seguro para speaker_id
-    try:
-        if speaker_id is not None:
-            wav = tts.tts(text=text, language=lang, speaker=speaker_id)
-        else:
-            wav = tts.tts(text=text, language=lang)
-    except Exception as e:
-        # Erro ao usar speaker_id — tentar sem ele
-        print(f"[AVISO] Erro com speaker_id={speaker_id}: {e}. Tentando sem speaker...")
-        wav = tts.tts(text=text, language=lang)
+    # Verificar se speaker_id está dentro do intervalo permitido
+    available_speakers = tts.speakers
+    if speaker_id >= len(available_speakers):
+        raise ValueError(
+            f"speaker_id {speaker_id} inválido. Existem apenas {len(available_speakers)} vozes disponíveis."
+        )
 
-    # Salva áudio temporário
+    speaker_name = available_speakers[speaker_id]
+    wav = tts.tts(text=text, language=lang, speaker=speaker_name)
+
     tmp_path = Path(tempfile.mkstemp(suffix=".wav")[1])
     tts.save_wav(wav, tmp_path)
     return str(tmp_path)
