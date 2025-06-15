@@ -3,7 +3,7 @@ import tempfile
 from TTS.api import TTS
 import streamlit as st
 
-MODEL_NAME = "tts_models/multilingual/multi-dataset/xtts_v2"  # modelo mais genérico e sem necessidade de sample voice
+MODEL_NAME = "tts_models/multilingual/libritts/tacotron2-DDC"
 _tts = None  # cache global
 
 def _get_tts():
@@ -16,10 +16,10 @@ def _get_tts():
 def synthesize_speech(text: str, lang: str, speaker_id: int = 0) -> str:
     try:
         tts = _get_tts()
-        # Se o modelo suportar speaker, usamos, senão ignoramos
+        # Usa speaker se suportado
         if hasattr(tts, "speakers") and tts.speakers:
             if speaker_id >= len(tts.speakers):
-                speaker_id = 0  # evita erro de índice
+                speaker_id = 0
             speaker_name = tts.speakers[speaker_id]
             wav = tts.tts(text=text, speaker=speaker_name, language=lang)
         else:
