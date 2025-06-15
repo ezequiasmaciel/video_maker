@@ -15,19 +15,28 @@ def _get_tts():
     return _tts
 
 
-def synthesize_speech(text: str, lang: str, speaker_id: int = 0) -> str:
+def synthesize_speech(text: str, lang: str, speaker_id=0) -> str:
     tts = _get_tts()
 
-    # Verificar se speaker_id está dentro do intervalo permitido
+    # Garante que speaker_id é inteiro
+    speaker_id = int(speaker_id)
+
+    # Lista de vozes disponíveis
     available_speakers = tts.speakers
+
+    # Verificação de índice válido
     if speaker_id >= len(available_speakers):
         raise ValueError(
             f"speaker_id {speaker_id} inválido. Existem apenas {len(available_speakers)} vozes disponíveis."
         )
 
+    # Seleciona nome da voz
     speaker_name = available_speakers[speaker_id]
+
+    # Gera o áudio
     wav = tts.tts(text=text, language=lang, speaker=speaker_name)
 
+    # Salva em arquivo temporário
     tmp_path = Path(tempfile.mkstemp(suffix=".wav")[1])
     tts.save_wav(wav, tmp_path)
     return str(tmp_path)
