@@ -15,25 +15,29 @@ def _get_tts():
     return _tts
 
 
-def synthesize_speech(text: str, lang: str, speaker_id=0) -> str:
+def synthesize_speech(text: str, lang: str, speaker_id=None) -> str:
     tts = _get_tts()
 
-    # Garante que speaker_id é inteiro
-    speaker_id = int(speaker_id)
+    # Garante um valor padrão
+    if speaker_id is None:
+        speaker_id = 0
+    else:
+        try:
+            speaker_id = int(speaker_id)
+        except (TypeError, ValueError):
+            speaker_id = 0  # fallback
 
     # Lista de vozes disponíveis
     available_speakers = tts.speakers
 
-    # Verificação de índice válido
+    # Valida índice
     if speaker_id >= len(available_speakers):
-        raise ValueError(
-            f"speaker_id {speaker_id} inválido. Existem apenas {len(available_speakers)} vozes disponíveis."
-        )
+        speaker_id = 0  # fallback seguro
 
-    # Seleciona nome da voz
+    # Nome da voz
     speaker_name = available_speakers[speaker_id]
 
-    # Gera o áudio
+    # Gera áudio
     wav = tts.tts(text=text, language=lang, speaker=speaker_name)
 
     # Salva em arquivo temporário
