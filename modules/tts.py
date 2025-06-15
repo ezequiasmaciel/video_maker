@@ -1,38 +1,35 @@
-"""Narração multilíngue via Coqui TTS (your_tts ou outro compatível)."""
 from pathlib import Path
 import tempfile
 from TTS.api import TTS
+import streamlit as st
 
-# Modelo compatível com Coqui TTS
-MODEL_NAME = "tts_models/multilingual/multi-dataset/your_tts"
+MODEL_NAME = "tts_models/multilingual/multi-dataset/xtts_v2"  # modelo mais genérico e sem necessidade de sample voice
 _tts = None  # cache global
-
 
 def _get_tts():
     global _tts
     if _tts is None:
+        st.info("Carregando modelo TTS, isso pode levar alguns segundos...")
         _tts = TTS(MODEL_NAME, progress_bar=False, gpu=False)
     return _tts
 
-
+def synthesize_speech(text: str, lang: str, speaker_id: int = 0) -> str:
     try:
-        if speaker_name and lang:
+        tts = _get_tts()
+        # Se o modelo suportar speaker, usamos, senão ignoramos
+        if hasattr(tts, "speakers") and tts.speakers:
+            if speaker_id >= len(tts.speakers):
+                speaker_id = 0  # evita erro de índice
+            speaker_name = tts.speakers[speaker_id]
             wav = tts.tts(text=text, speaker=speaker_name, language=lang)
-        elif speaker_name:
-            wav = tts.tts(text=text, speaker=speaker_name)
-        elif lang:
-            wav = tts.tts(text=text, language=lang)
         else:
-            wav = tts.tts(text=text)
+            wav = tts.tts(text=text, language=lang)
+
+        tmp_path = Path(tempfile.mkstemp(suffix=".wav")[1])
+        tts.save_wav(wav, tmp_path)
+        return str(tmp_path)
 
     except Exception as e:
-        # ←‑‑‑ Mostra a mensagem completa no Streamlit
-        import streamlit as st
-        st.error(f"⚠️ Falha no TTS: {e}")
+        st.error(f"Erro no TTS: {e}")
+        print(f"Erro detalhado no TTS: {e}")
         raise
-
-
-    # Salva o áudio temporariamente
-    tmp_path = Path(tempfile.mkstemp(suffix=".wav")[1])
-    tts.save_wav(wav, tmp_path)
-    return str(tmp_path)
