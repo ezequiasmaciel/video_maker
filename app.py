@@ -3,11 +3,11 @@ from modules import image_generator, stock_assets, tts, video_maker
 
 
 def main():
-    st.set_page_config(page_title="AI Video Maker", layout="wide")
+    st.set_page_config(page_title="AI Video Maker", layout="wide")
 
-    st.title("🎞️ AI Video Maker (100 % OSS)")
+    st.title("🎞️ AI Video Maker (100 % OSS)")
     st.caption(
-        "Gere vídeos a partir de um roteiro usando IA ou clipes gratuitos, com narração humana multilíngue e legendas."  # noqa: E501
+        "Gere vídeos a partir de um roteiro usando IA ou clipes gratuitos, com narração humana multilíngue e legendas."
     )
 
     # Entrada de roteiro
@@ -24,9 +24,12 @@ def main():
 
     with col_tts:
         language = st.selectbox("Idioma da narração", ["pt", "en", "es"])
-        speaker = st.slider(
-            "Speaker ID (0=fem | 1=masc | 2+=outros)", 0, 9, 0, help="Variar timbre/entonação"
-        )
+        use_custom_speaker = st.checkbox("Usar Speaker ID avançado")
+        speaker = None
+        if use_custom_speaker:
+            speaker = st.slider(
+                "Speaker ID (0=fem | 1=masc | 2+=outros)", 0, 9, 0, help="Variar timbre/entonação"
+            )
 
     with col_font:
         font_name = st.selectbox(
@@ -34,13 +37,13 @@ def main():
             ["DejaVu-Serif", "DejaVu-Sans", "Liberation-Serif", "Liberation-Sans"],
         )
 
-    if st.button("🎬 Gerar Vídeo"):
+    if st.button("🎬 Gerar Vídeo"):
         if not script_text.strip():
             st.error("Por favor, cole um roteiro primeiro.")
             st.stop()
 
         # 1. Coletar mídia
-        with st.spinner("Coletando/gerando mídia visual …"):
+        with st.spinner("Coletando/gerando mídia visual …"):
             if asset_mode.startswith("Gerar"):
                 media_paths, scenes = image_generator.generate_images(script_text)
             else:
@@ -49,11 +52,11 @@ def main():
         st.success(f"{len(media_paths)} cenas prontas.")
 
         # 2. Narração TTS
-        with st.spinner("Gerando narração …"):
+        with st.spinner("Gerando narração …"):
             audio_path = tts.synthesize_speech(script_text, language, speaker)
 
         # 3. Compor vídeo com legendas
-        with st.spinner("Compondo vídeo final …"):
+        with st.spinner("Compondo vídeo final …"):
             video_path = video_maker.compose_video(
                 media_paths, audio_path, scenes, font_name, language
             )
