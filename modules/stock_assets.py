@@ -5,7 +5,7 @@ import tempfile
 import pathlib
 import os
 
-PEXELS_API_KEY = os.getenv("PEXELS_API_KEY", "COLE_SUA_CHAVE")
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY", "V3wNFAYCWdK2yO6k6EFWaOLF6rgHqDgoYFwBgVPgEyASjZzrZXpH85sD")
 
 
 def fetch_assets(script: str) -> List[str]:
