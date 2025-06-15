@@ -5,7 +5,7 @@ from modules import image_generator, stock_assets, tts, video_maker
 def main():
     st.set_page_config(page_title="AI Video Maker", layout="wide")
 
-    st.title("🎞️ AI Video Maker (100 % OSS)")
+    st.title("🎞️ AI Video Maker (100% OSS)")
     st.caption(
         "Gere vídeos a partir de um roteiro usando IA ou clipes gratuitos, com narração humana multilíngue e legendas."
     )
@@ -14,22 +14,13 @@ def main():
     script_text = st.text_area("Cole seu roteiro (use marcadores CENA 1:, CENA 2:, ...):", height=350)
 
     # Opções de mídia
-    col_media, col_tts, col_font = st.columns(3)
+    col_media, col_font = st.columns([2, 1])
 
     with col_media:
         asset_mode = st.radio(
             "Fonte de mídia visual:",
             ["Gerar Imagens com IA", "Vídeos/Imagens de Acervo Gratuito"],
         )
-
-    with col_tts:
-        language = st.selectbox("Idioma da narração", ["pt", "en", "es"])
-        use_custom_speaker = st.checkbox("Usar Speaker ID avançado")
-        speaker = None
-        if use_custom_speaker:
-            speaker = st.slider(
-                "Speaker ID (0=fem | 1=masc | 2+=outros)", 0, 9, 0, help="Variar timbre/entonação"
-            )
 
     with col_font:
         font_name = st.selectbox(
@@ -53,12 +44,16 @@ def main():
 
         # 2. Narração TTS
         with st.spinner("Gerando narração …"):
-            audio_path = tts.synthesize_speech(script_text, language, speaker)
+            try:
+                audio_path = tts.synthesize_speech(script_text)
+            except Exception as e:
+                st.error(f"Erro ao gerar áudio: {e}")
+                st.stop()
 
         # 3. Compor vídeo com legendas
         with st.spinner("Compondo vídeo final …"):
             video_path = video_maker.compose_video(
-                media_paths, audio_path, scenes, font_name, language
+                media_paths, audio_path, scenes, font_name, language=None
             )
 
         st.video(video_path)
