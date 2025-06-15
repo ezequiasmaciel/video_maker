@@ -1,35 +1,42 @@
+"""Módulo TTS para síntese de fala simples via Coqui TTS."""
+
 from pathlib import Path
 import tempfile
 from TTS.api import TTS
-import streamlit as st
+from TTS.utils.manage import ModelManager
 
-MODEL_NAME = "tts_models/multilingual/libritts/tacotron2-DDC"
+MODEL_NAME = "tts_models/en/ljspeech/tacotron2-DDC"
 _tts = None  # cache global
+
 
 def _get_tts():
     global _tts
     if _tts is None:
-        st.info("Carregando modelo TTS, isso pode levar alguns segundos...")
         _tts = TTS(MODEL_NAME, progress_bar=False, gpu=False)
     return _tts
 
-def synthesize_speech(text: str, lang: str, speaker_id: int = 0) -> str:
-    try:
-        tts = _get_tts()
-        # Usa speaker se suportado
-        if hasattr(tts, "speakers") and tts.speakers:
-            if speaker_id >= len(tts.speakers):
-                speaker_id = 0
-            speaker_name = tts.speakers[speaker_id]
-            wav = tts.tts(text=text, speaker=speaker_name, language=lang)
-        else:
-            wav = tts.tts(text=text, language=lang)
 
-        tmp_path = Path(tempfile.mkstemp(suffix=".wav")[1])
-        tts.save_wav(wav, tmp_path)
-        return str(tmp_path)
+def synthesize_speech(text: str) -> str:
+    """
+    Sintetiza áudio a partir de texto.
+    Retorna o caminho do arquivo .wav gerado.
+    """
+    tts = _get_tts()
+    wav = tts.tts(text)
+    tmp_path = Path(tempfile.mkstemp(suffix=".wav")[1])
+    tts.save_wav(wav, tmp_path)
+    return str(tmp_path)
 
-    except Exception as e:
-        st.error(f"Erro no TTS: {e}")
-        print(f"Erro detalhado no TTS: {e}")
-        raise
+
+def list_available_models():
+    """
+    Retorna uma lista dos modelos TTS disponíveis no ambiente.
+    """
+    manager = ModelManager()
+    modelos = []
+    for model_type, langs in manager.models_dict.items():
+        for lang, datasets in langs.items():
+            for dataset, models in datasets.items():
+                for model_name in models.keys():
+                    modelos.append(f"{model_type}/{lang}/{dataset}/{model_name}")
+    return modelos
