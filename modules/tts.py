@@ -15,21 +15,6 @@ def _get_tts():
     return _tts
 
 
-def synthesize_speech(text: str, lang: str, speaker_id: int = 0) -> str:
-    tts = _get_tts()
-
-    # Pega lista de locutores (se houver)
-    available_speakers = tts.speakers if hasattr(tts, "speakers") and tts.speakers else []
-
-    # Seleciona locutor, se possível
-    if available_speakers:
-        if speaker_id >= len(available_speakers):
-            speaker_id = 0  # fallback
-        speaker_name = available_speakers[speaker_id]
-    else:
-        speaker_name = None
-
-    # Gera áudio com os parâmetros suportados
     try:
         if speaker_name and lang:
             wav = tts.tts(text=text, speaker=speaker_name, language=lang)
@@ -39,8 +24,13 @@ def synthesize_speech(text: str, lang: str, speaker_id: int = 0) -> str:
             wav = tts.tts(text=text, language=lang)
         else:
             wav = tts.tts(text=text)
+
     except Exception as e:
-        raise ValueError(f"Erro ao gerar áudio com TTS: {e}")
+        # ←‑‑‑ Mostra a mensagem completa no Streamlit
+        import streamlit as st
+        st.error(f"⚠️ Falha no TTS: {e}")
+        raise
+
 
     # Salva o áudio temporariamente
     tmp_path = Path(tempfile.mkstemp(suffix=".wav")[1])
